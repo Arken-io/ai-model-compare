@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Key,
@@ -9,10 +9,48 @@ import {
   AlertCircle,
   ArrowRight,
   KeyRound,
+  Copy,
+  Check,
+  Clock,
+  History,
+  X,
 } from "lucide-react";
 import { providers } from "@/lib/providers";
 
-type ResultState = { text: string | null; error: string | null };
+type ResultState = {
+  text: string | null;
+  error: string | null;
+  durationMs: number | null;
+};
+
+const RECENT_PROMPTS_KEY = "arken-compare:recent-prompts";
+const RECENT_PROMPTS_LIMIT = 8;
+
+function loadRecentPrompts(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(RECENT_PROMPTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((p) => typeof p === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentPrompts(prompts: string[]) {
+  try {
+    window.localStorage.setItem(RECENT_PROMPTS_KEY, JSON.stringify(prompts));
+  } catch {
+    // localStorage unavailable (private mode, quota, etc.) — fail silently,
+    // recent prompts just won't persist this session.
+  }
+}
+
+function wordCount(text: string): number {
+  const trimmed = text.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
 
 export function CompareTool() {
   const [keys, setKeys] = useState<Record<string, string>>({});
@@ -20,6 +58,41 @@ export function CompareTool() {
   const [results, setResults] = useState<Record<string, ResultState>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [recentPrompts, setRecentPrompts] = useState<string[]>([]);
+
+  useEffect(() => {
+    setRecentPrompts(loadRecentPrompts());
+  }, []);
+
+  function pushRecentPrompt(p: string) {
+    setRecentPrompts((prev) => {
+      const next = [p, ...prev.filter((x) => x !== p)].slice(
+        0,
+        RECENT_PROMPTS_LIMIT
+      );
+      saveRecentPrompts(next);
+      return next;
+    });
+  }
+
+  function removeRecentPrompt(p: string) {
+    setRecentPrompts((prev) => {
+      const next = prev.filter((x) => x !== p);
+      saveRecentPrompts(next);
+      return next;
+    });
+  }
+
+  async function handleCopy(id: string, text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((c) => (c === id ? null : c)), 1500);
+    } catch {
+      // Clipboard API blocked (permissions, insecure context) — no-op.
+    }
+  }
 
   const hasAnyKey = providers.some((p) => keys[p.meta.id]?.trim());
   const anyLoading = Object.values(loading).some(Boolean);
@@ -34,16 +107,26 @@ export function CompareTool() {
     activeProviders.forEach((p) => (nextLoading[p.meta.id] = true));
     setLoading(nextLoading);
     setResults({});
+    pushRecentPrompt(prompt.trim());
 
     await Promise.all(
       activeProviders.map(async (p) => {
+        const startedAt = performance.now();
         try {
           const text = await p.call(prompt, keys[p.meta.id].trim());
-          setResults((r) => ({ ...r, [p.meta.id]: { text, error: null } }));
+          const durationMs = performance.now() - startedAt;
+          setResults((r) => ({
+            ...r,
+            [p.meta.id]: { text, error: null, durationMs },
+          }));
         } catch (e) {
           setResults((r) => ({
             ...r,
-            [p.meta.id]: { text: null, error: (e as Error).message },
+            [p.meta.id]: {
+              text: null,
+              error: (e as Error).message,
+              durationMs: null,
+            },
           }));
         } finally {
           setLoading((l) => ({ ...l, [p.meta.id]: false }));
@@ -120,6 +203,37 @@ export function CompareTool() {
           className="focus-ring w-full resize-y rounded-lg border border-border bg-base px-3.5 py-3 text-[14px] leading-relaxed text-ink placeholder:text-ink-faint"
         />
 
+        {recentPrompts.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <span className="flex items-center gap-1 text-[11.5px] text-ink-faint">
+              <History size={11} /> Recent:
+            </span>
+            {recentPrompts.map((p) => (
+              <span
+                key={p}
+                className="group inline-flex max-w-[220px] items-center gap-1 rounded-full border border-border-soft bg-base px-2.5 py-1 text-[11.5px] text-ink-faint"
+              >
+                <button
+                  type="button"
+                  onClick={() => setPrompt(p)}
+                  className="focus-ring truncate hover:text-accent-soft"
+                  title={p}
+                >
+                  {p}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeRecentPrompt(p)}
+                  className="focus-ring shrink-0 text-ink-faint hover:text-red-400"
+                  aria-label="Remove from recent prompts"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
         <AnimatePresence>
           {error && (
             <motion.div
@@ -169,8 +283,37 @@ export function CompareTool() {
               transition={{ delay: i * 0.06, duration: 0.35 }}
               className="overflow-hidden rounded-xl2 border border-border bg-surface/60"
             >
-              <div className="border-b border-border-soft px-4 py-3 text-[13px] font-semibold text-ink">
-                {p.meta.label}
+              <div className="flex items-center justify-between gap-2 border-b border-border-soft px-4 py-3">
+                <span className="text-[13px] font-semibold text-ink">
+                  {p.meta.label}
+                </span>
+                {result?.text && (
+                  <div className="flex items-center gap-2.5 text-[11px] text-ink-faint">
+                    {result.durationMs !== null && (
+                      <span className="flex items-center gap-1" title="Response time">
+                        <Clock size={11} />
+                        {(result.durationMs / 1000).toFixed(1)}s
+                      </span>
+                    )}
+                    <span title="Word count">
+                      {wordCount(result.text)} words
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(p.meta.id, result.text!)}
+                      className="focus-ring flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:text-accent-soft"
+                      aria-label={`Copy ${p.meta.label} response`}
+                    >
+                      {copiedId === p.meta.id ? (
+                        <>
+                          <Check size={11} /> Copied
+                        </>
+                      ) : (
+                        <Copy size={11} />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="min-h-[110px] px-4 py-4 text-[13.5px] leading-relaxed">
                 {!hasKey && (
