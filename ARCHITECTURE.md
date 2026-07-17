@@ -59,13 +59,28 @@ requests start failing, this is the first — and usually only — file that
 needs to change. Verified against each provider's official docs as of
 July 2026; re-verify here first before assuming a bug elsewhere.
 
+Each entry is `{ id, displayName }` rather than a bare string — `id` is
+the raw API model string, `displayName` is what the UI shows next to
+each provider's name. Kept together per entry (not split across files)
+so updating a model never means touching two places.
+
 Google specifically has been locking free-tier model IDs out for *new*
 API keys every few months (this happened to `gemini-2.0-flash` in March
 2026, and is expected to keep happening as newer generations ship). So
-`MODELS.google` is an **ordered list**, not a single string — `google.ts`
+`MODELS.google` is an **ordered list**, not a single entry — `google.ts`
 tries each candidate and only advances to the next one on a 404 ("model
 not found for this account"), never on other errors like a bad key or a
 rate limit, since those aren't fixed by switching models.
+
+**Known tech debt (tracked for v1.2, not fixed now):** `call()` only
+returns the response text, not which candidate actually served it. If
+candidate 0 404s and candidate 1 answers, the UI still shows
+`google[0].displayName` — the label can silently drift from the model
+that actually generated the text. Fixing this means changing `call()`'s
+return type across all three providers (currently `Promise<string>`),
+which is a bigger change than the fallback-list feature warrants on its
+own. Worth fixing before this label is ever relied on for something that
+matters (e.g. a future "which model answered" feature).
 
 ## Why Anthropic needs `anthropic-dangerous-direct-browser-access`
 
@@ -91,6 +106,38 @@ not a failure, so it shouldn't look like one.
 
 - No AI Judge / scoring between responses — real feature, real added
   complexity, deferred until v1 has been used by a real person.
-- No login, no database, no history — nothing persists between visits.
+- No login, no database. "Recent prompts" (below) is the one exception
+  to "no persistence," and it's deliberately lightweight.
 - No Arken branding beyond header + footer — the tool is the product,
   the brand is a footnote.
+
+## v1.1: what was added and why each one earns its place
+
+- **Response time + word count per column** — free to compute (timing
+  already happens around each `call()`; word count is a one-line split),
+  and turns "3 responses next to each other" into an actual comparison.
+- **Copy button per response** — the most obvious missing action: people
+  compare in order to *use* an answer, not just read it.
+- **Friendly error messages** — maps common HTTP statuses (401/403, 429,
+  404, 5xx) to plain-language titles, without touching provider files
+  (see `friendlyError()` in `CompareTool.tsx`). Falls back to the raw
+  message for anything uncommon, so nothing is ever silently hidden.
+- **Recent prompts (localStorage, last 8)** — intentionally *not* the
+  Vault/History split from the Prompt Forge spec. This is a flat array
+  of strings with no titles, tags, or export — a shortcut for "run that
+  again," not a saved-prompts feature. If Prompt Forge ever gets built,
+  this should not turn into a second, competing history — one of them
+  should absorb the other rather than both existing side by side.
+- **Regenerate per provider** — reuses the same `runProviders()` a full
+  Compare uses, just scoped to one provider; adding a new provider to
+  `lib/providers/index.ts` gets Regenerate for free, no extra wiring.
+
+## Deployment gotcha (learned the hard way)
+
+The first Vercel deploy failed not because of the code, but because the
+Next.js project files were nested one level too deep in the GitHub repo
+(`arken-compare/` inside the repo root instead of the project files
+being at the root). Next.js/Vercel expects `package.json`, `app/`, etc.
+at the repository root. If a future deploy fails in a way that looks
+unrelated to any code change, check the repo structure before debugging
+the app itself.
