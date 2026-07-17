@@ -16,6 +16,8 @@ import {
   X,
   RotateCw,
   Trash2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { providers } from "@/lib/providers";
 
@@ -88,6 +90,7 @@ export function CompareTool() {
   const [error, setError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [recentPrompts, setRecentPrompts] = useState<string[]>([]);
+  const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setRecentPrompts(loadRecentPrompts());
@@ -223,15 +226,36 @@ export function CompareTool() {
         <div className="grid gap-2.5 sm:grid-cols-3">
           {providers.map((p) => (
             <div key={p.meta.id}>
-              <input
-                type="password"
-                value={keys[p.meta.id] || ""}
-                onChange={(e) =>
-                  setKeys((k) => ({ ...k, [p.meta.id]: e.target.value }))
-                }
-                placeholder={p.meta.keyPlaceholder}
-                className="focus-ring w-full rounded-lg border border-border bg-base px-3.5 py-2.5 text-[13.5px] text-ink placeholder:text-ink-faint"
-              />
+              <div className="relative">
+                <input
+                  type={visibleKeys[p.meta.id] ? "text" : "password"}
+                  value={keys[p.meta.id] || ""}
+                  onChange={(e) =>
+                    setKeys((k) => ({ ...k, [p.meta.id]: e.target.value }))
+                  }
+                  placeholder={p.meta.keyPlaceholder}
+                  className="focus-ring w-full rounded-lg border border-border bg-base px-3.5 py-2.5 pr-9 text-[13.5px] text-ink placeholder:text-ink-faint"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleKeys((v) => ({
+                      ...v,
+                      [p.meta.id]: !v[p.meta.id],
+                    }))
+                  }
+                  className="focus-ring absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink"
+                  aria-label={
+                    visibleKeys[p.meta.id] ? "Hide API key" : "Show API key"
+                  }
+                >
+                  {visibleKeys[p.meta.id] ? (
+                    <EyeOff size={14} />
+                  ) : (
+                    <Eye size={14} />
+                  )}
+                </button>
+              </div>
               <a
                 href={p.meta.getKeyUrl}
                 target="_blank"
@@ -255,7 +279,13 @@ export function CompareTool() {
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Ask anything..."
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+              e.preventDefault();
+              handleCompare();
+            }
+          }}
+          placeholder="Ask anything... (⌘/Ctrl + Enter to compare)"
           rows={4}
           className="focus-ring w-full resize-y rounded-lg border border-border bg-base px-3.5 py-3 text-[14px] leading-relaxed text-ink placeholder:text-ink-faint"
         />
@@ -361,17 +391,19 @@ export function CompareTool() {
                     {p.meta.modelDisplayName}
                   </div>
                 </div>
-                {result?.text && (
+                {result && (result.text || result.error) && (
                   <div className="flex items-center gap-2.5 text-[11px] text-ink-faint">
-                    {result.durationMs !== null && (
+                    {result.text && result.durationMs !== null && (
                       <span className="flex items-center gap-1" title="Response time">
                         <Clock size={11} />
                         {(result.durationMs / 1000).toFixed(1)}s
                       </span>
                     )}
-                    <span title="Word count">
-                      {wordCount(result.text)} words
-                    </span>
+                    {result.text && (
+                      <span title="Word count">
+                        {wordCount(result.text)} words
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => regenerate(p.meta.id)}
@@ -385,20 +417,22 @@ export function CompareTool() {
                         className={loading[p.meta.id] ? "animate-spin" : ""}
                       />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(p.meta.id, result.text!)}
-                      className="focus-ring flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:text-accent-soft"
-                      aria-label={`Copy ${p.meta.label} response`}
-                    >
-                      {copiedId === p.meta.id ? (
-                        <>
-                          <Check size={11} /> Copied
-                        </>
-                      ) : (
-                        <Copy size={11} />
-                      )}
-                    </button>
+                    {result.text && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(p.meta.id, result.text!)}
+                        className="focus-ring flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:text-accent-soft"
+                        aria-label={`Copy ${p.meta.label} response`}
+                      >
+                        {copiedId === p.meta.id ? (
+                          <>
+                            <Check size={11} /> Copied
+                          </>
+                        ) : (
+                          <Copy size={11} />
+                        )}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
