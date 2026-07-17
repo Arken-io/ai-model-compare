@@ -4,7 +4,8 @@ import { MODELS } from "../config/models";
 export const meta: ProviderMeta = {
   id: "anthropic",
   label: "Claude",
-  model: MODELS.anthropic,
+  model: MODELS.anthropic.id,
+  modelDisplayName: MODELS.anthropic.displayName,
   keyPlaceholder: "sk-ant-...",
   getKeyUrl: "https://console.anthropic.com/settings/keys",
 };

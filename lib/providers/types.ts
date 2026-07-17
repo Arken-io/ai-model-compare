@@ -2,6 +2,9 @@ export interface ProviderMeta {
   id: "openai" | "anthropic" | "google";
   label: string;
   model: string;
+  /** Human-friendly model name for UI display, separate from the raw API
+   * model id in `model`. Keep this updated alongside lib/config/models.ts. */
+  modelDisplayName: string;
   keyPlaceholder: string;
   getKeyUrl: string;
 }

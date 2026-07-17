@@ -4,7 +4,8 @@ import { MODELS } from "../config/models";
 export const meta: ProviderMeta = {
   id: "openai",
   label: "GPT",
-  model: MODELS.openai,
+  model: MODELS.openai.id,
+  modelDisplayName: MODELS.openai.displayName,
   keyPlaceholder: "sk-...",
   getKeyUrl: "https://platform.openai.com/api-keys",
 };

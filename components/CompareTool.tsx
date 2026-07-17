@@ -14,6 +14,8 @@ import {
   Clock,
   History,
   X,
+  RotateCw,
+  Trash2,
 } from "lucide-react";
 import { providers } from "@/lib/providers";
 
@@ -50,6 +52,32 @@ function saveRecentPrompts(prompts: string[]) {
 function wordCount(text: string): number {
   const trimmed = text.trim();
   return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
+/**
+ * Every provider throws `Error("HTTP {status}: {detail}")` on a bad
+ * response (see readErrorDetail/safeFetch in lib/providers/types.ts) — this
+ * is the one shared shape across all providers, so we can turn common
+ * status codes into a friendly message without touching provider files.
+ */
+function friendlyError(message: string): { title: string; detail: string } {
+  const match = message.match(/^HTTP (\d+):/);
+  const status = match ? Number(match[1]) : null;
+  switch (status) {
+    case 401:
+    case 403:
+      return { title: "Invalid API key", detail: "Check the key you entered above." };
+    case 429:
+      return { title: "Rate limited", detail: "Too many requests — wait a moment and try again." };
+    case 404:
+      return { title: "Model not found", detail: "This provider no longer serves the configured model." };
+    case 500:
+    case 502:
+    case 503:
+      return { title: "Provider error", detail: "The provider's servers had an issue. Try again." };
+    default:
+      return { title: "Request failed", detail: message };
+  }
 }
 
 export function CompareTool() {
@@ -96,21 +124,23 @@ export function CompareTool() {
 
   const hasAnyKey = providers.some((p) => keys[p.meta.id]?.trim());
   const anyLoading = Object.values(loading).some(Boolean);
+  const hasAnyResult = Object.keys(results).length > 0;
 
-  async function handleCompare() {
-    setError("");
-    if (!prompt.trim()) return setError("Write a prompt first.");
-    if (!hasAnyKey) return setError("Add at least one API key.");
-
-    const activeProviders = providers.filter((p) => keys[p.meta.id]?.trim());
-    const nextLoading: Record<string, boolean> = {};
-    activeProviders.forEach((p) => (nextLoading[p.meta.id] = true));
-    setLoading(nextLoading);
-    setResults({});
-    pushRecentPrompt(prompt.trim());
+  /**
+   * Runs the given providers' call() and writes their results — used for
+   * both the full "Compare" pass and a single-provider "Regenerate". Adding
+   * a new provider to lib/providers/index.ts automatically gets Regenerate
+   * for free; there is no per-provider function to write.
+   */
+  async function runProviders(targets: typeof providers) {
+    setLoading((l) => {
+      const next = { ...l };
+      targets.forEach((p) => (next[p.meta.id] = true));
+      return next;
+    });
 
     await Promise.all(
-      activeProviders.map(async (p) => {
+      targets.map(async (p) => {
         const startedAt = performance.now();
         try {
           const text = await p.call(prompt, keys[p.meta.id].trim());
@@ -133,6 +163,28 @@ export function CompareTool() {
         }
       })
     );
+  }
+
+  async function handleCompare() {
+    setError("");
+    if (!prompt.trim()) return setError("Write a prompt first.");
+    if (!hasAnyKey) return setError("Add at least one API key.");
+
+    const activeProviders = providers.filter((p) => keys[p.meta.id]?.trim());
+    setResults({});
+    pushRecentPrompt(prompt.trim());
+    await runProviders(activeProviders);
+  }
+
+  async function regenerate(providerId: string) {
+    const p = providers.find((pr) => pr.meta.id === providerId);
+    if (!p || !prompt.trim() || !keys[p.meta.id]?.trim()) return;
+    await runProviders([p]);
+  }
+
+  function handleClear() {
+    setResults({});
+    setError("");
   }
 
   return (
@@ -192,9 +244,14 @@ export function CompareTool() {
           ))}
         </div>
 
-        <label className="mb-2 mt-6 block text-[13px] font-medium text-ink-muted">
-          Prompt
-        </label>
+        <div className="mb-2 mt-6 flex items-center justify-between">
+          <label className="block text-[13px] font-medium text-ink-muted">
+            Prompt
+          </label>
+          <span className="text-[11.5px] text-ink-faint">
+            {prompt.length} chars
+          </span>
+        </div>
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
@@ -248,26 +305,38 @@ export function CompareTool() {
           )}
         </AnimatePresence>
 
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={handleCompare}
-          disabled={anyLoading}
-          className="focus-ring group mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-accent-dim disabled:opacity-60"
-        >
-          {anyLoading ? (
-            <>
-              <Loader2 size={15} className="animate-spin" /> Comparing
-            </>
-          ) : (
-            <>
-              Compare
-              <ArrowRight
-                size={15}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
-            </>
+        <div className="mt-6 flex gap-2.5">
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleCompare}
+            disabled={anyLoading}
+            className="focus-ring group flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-accent-dim disabled:opacity-60"
+          >
+            {anyLoading ? (
+              <>
+                <Loader2 size={15} className="animate-spin" /> Comparing
+              </>
+            ) : (
+              <>
+                Compare
+                <ArrowRight
+                  size={15}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
+              </>
+            )}
+          </motion.button>
+          {hasAnyResult && (
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={handleClear}
+              disabled={anyLoading}
+              className="focus-ring flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-3 text-[14px] font-medium text-ink-muted transition-colors hover:bg-surface hover:text-ink disabled:opacity-60"
+            >
+              <Trash2 size={14} /> Clear
+            </motion.button>
           )}
-        </motion.button>
+        </div>
       </motion.div>
 
       {/* Results — always 3 columns */}
@@ -284,9 +353,14 @@ export function CompareTool() {
               className="overflow-hidden rounded-xl2 border border-border bg-surface/60"
             >
               <div className="flex items-center justify-between gap-2 border-b border-border-soft px-4 py-3">
-                <span className="text-[13px] font-semibold text-ink">
-                  {p.meta.label}
-                </span>
+                <div>
+                  <div className="text-[13px] font-semibold text-ink">
+                    {p.meta.label}
+                  </div>
+                  <div className="text-[11px] text-ink-faint">
+                    {p.meta.modelDisplayName}
+                  </div>
+                </div>
                 {result?.text && (
                   <div className="flex items-center gap-2.5 text-[11px] text-ink-faint">
                     {result.durationMs !== null && (
@@ -298,6 +372,19 @@ export function CompareTool() {
                     <span title="Word count">
                       {wordCount(result.text)} words
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => regenerate(p.meta.id)}
+                      disabled={loading[p.meta.id]}
+                      className="focus-ring flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:text-accent-soft disabled:opacity-50"
+                      aria-label={`Regenerate ${p.meta.label} response`}
+                      title="Regenerate"
+                    >
+                      <RotateCw
+                        size={11}
+                        className={loading[p.meta.id] ? "animate-spin" : ""}
+                      />
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleCopy(p.meta.id, result.text!)}
@@ -329,7 +416,17 @@ export function CompareTool() {
                   </span>
                 )}
                 {hasKey && !loading[p.meta.id] && result?.error && (
-                  <span className="text-red-400">{result.error}</span>
+                  <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2.5">
+                    <AlertCircle size={14} className="mt-0.5 shrink-0 text-red-400" />
+                    <div>
+                      <div className="text-[13px] font-medium text-red-400">
+                        {friendlyError(result.error).title}
+                      </div>
+                      <div className="mt-0.5 text-[12px] text-ink-faint">
+                        {friendlyError(result.error).detail}
+                      </div>
+                    </div>
+                  </div>
                 )}
                 {hasKey && !loading[p.meta.id] && result?.text && (
                   <p className="whitespace-pre-wrap text-ink-muted">

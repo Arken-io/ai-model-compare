@@ -5,7 +5,14 @@ export const meta: ProviderMeta = {
   id: "google",
   label: "Gemini",
   // Shown in the UI as the primary model; the fallback chain is internal.
-  model: MODELS.google[0],
+  model: MODELS.google[0].id,
+  // NOTE: this reflects the *primary* candidate. Because call() falls back
+  // silently to the next candidate on a 404 (see below), the model that
+  // actually answered can differ from this label. Tracked as known tech
+  // debt for v1.2 (see MODELS.google comment in lib/config/models.ts) —
+  // fixing it means changing call()'s return type across all three
+  // providers, out of scope for a fallback-list feature on its own.
+  modelDisplayName: MODELS.google[0].displayName,
   keyPlaceholder: "AIza...",
   getKeyUrl: "https://aistudio.google.com/app/apikey",
 };
@@ -42,7 +49,7 @@ export async function call(prompt: string, apiKey: string): Promise<string> {
   let lastError = "";
 
   for (let i = 0; i < candidates.length; i++) {
-    const modelId = candidates[i];
+    const modelId = candidates[i].id;
     const result = await tryModel(modelId, prompt, apiKey);
 
     if (result.ok) return result.text;
