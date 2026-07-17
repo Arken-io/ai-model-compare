@@ -15,7 +15,6 @@ import {
   History,
   X,
   RotateCw,
-  Trash2,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -127,7 +126,6 @@ export function CompareTool() {
 
   const hasAnyKey = providers.some((p) => keys[p.meta.id]?.trim());
   const anyLoading = Object.values(loading).some(Boolean);
-  const hasAnyResult = Object.keys(results).length > 0;
 
   /**
    * Runs the given providers' call() and writes their results — used for
@@ -183,11 +181,6 @@ export function CompareTool() {
     const p = providers.find((pr) => pr.meta.id === providerId);
     if (!p || !prompt.trim() || !keys[p.meta.id]?.trim()) return;
     await runProviders([p]);
-  }
-
-  function handleClear() {
-    setResults({});
-    setError("");
   }
 
   return (
@@ -285,10 +278,20 @@ export function CompareTool() {
               handleCompare();
             }
           }}
-          placeholder="Ask anything... (⌘/Ctrl + Enter to compare)"
+          placeholder="Ask anything..."
           rows={4}
           className="focus-ring w-full resize-y rounded-lg border border-border bg-base px-3.5 py-3 text-[14px] leading-relaxed text-ink placeholder:text-ink-faint"
         />
+        <div className="mt-1.5 flex items-center justify-end gap-1 text-[11px] text-ink-faint">
+          <kbd className="rounded border border-border-soft px-1.5 py-0.5 font-sans">
+            ⌘/Ctrl
+          </kbd>
+          <span>+</span>
+          <kbd className="rounded border border-border-soft px-1.5 py-0.5 font-sans">
+            Enter
+          </kbd>
+          <span>to compare</span>
+        </div>
 
         {recentPrompts.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -335,38 +338,26 @@ export function CompareTool() {
           )}
         </AnimatePresence>
 
-        <div className="mt-6 flex gap-2.5">
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={handleCompare}
-            disabled={anyLoading}
-            className="focus-ring group flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-accent-dim disabled:opacity-60"
-          >
-            {anyLoading ? (
-              <>
-                <Loader2 size={15} className="animate-spin" /> Comparing
-              </>
-            ) : (
-              <>
-                Compare
-                <ArrowRight
-                  size={15}
-                  className="transition-transform group-hover:translate-x-0.5"
-                />
-              </>
-            )}
-          </motion.button>
-          {hasAnyResult && (
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={handleClear}
-              disabled={anyLoading}
-              className="focus-ring flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-3 text-[14px] font-medium text-ink-muted transition-colors hover:bg-surface hover:text-ink disabled:opacity-60"
-            >
-              <Trash2 size={14} /> Clear
-            </motion.button>
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={handleCompare}
+          disabled={anyLoading}
+          className="focus-ring group mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-accent-dim disabled:opacity-60"
+        >
+          {anyLoading ? (
+            <>
+              <Loader2 size={15} className="animate-spin" /> Comparing
+            </>
+          ) : (
+            <>
+              Compare
+              <ArrowRight
+                size={15}
+                className="transition-transform group-hover:translate-x-0.5"
+              />
+            </>
           )}
-        </div>
+        </motion.button>
       </motion.div>
 
       {/* Results — always 3 columns */}
