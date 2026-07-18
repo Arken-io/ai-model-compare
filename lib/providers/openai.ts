@@ -8,7 +8,7 @@ export const meta: ProviderMeta = {
   modelDisplayName: MODELS.openai.displayName,
   keyPlaceholder: "sk-...",
   getKeyUrl: "https://platform.openai.com/api-keys",
-  logoPath: "/logos/openai.svg",
+  color: "#34D399",
 };
 
 export async function call(prompt: string, apiKey: string): Promise<string> {

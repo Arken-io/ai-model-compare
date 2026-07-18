@@ -8,7 +8,7 @@ export const meta: ProviderMeta = {
   modelDisplayName: MODELS.deepseek.displayName,
   keyPlaceholder: "sk-...",
   getKeyUrl: "https://platform.deepseek.com/api_keys",
-  logoPath: "/logos/deepseek.svg",
+  color: "#38BDF8",
 };
 
 /**

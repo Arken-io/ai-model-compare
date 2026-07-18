@@ -8,7 +8,7 @@ export const meta: ProviderMeta = {
   modelDisplayName: MODELS.xai.displayName,
   keyPlaceholder: "xai-...",
   getKeyUrl: "https://console.x.ai/team/default/api-keys",
-  logoPath: "/logos/xai.svg",
+  color: "#A78BFA",
 };
 
 /**

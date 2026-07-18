@@ -8,7 +8,7 @@ export const meta: ProviderMeta = {
   modelDisplayName: MODELS.llama.displayName,
   keyPlaceholder: "Llama API key",
   getKeyUrl: "https://llama.developer.meta.com/",
-  logoPath: "/logos/llama.svg",
+  color: "#F472B6",
 };
 
 /**

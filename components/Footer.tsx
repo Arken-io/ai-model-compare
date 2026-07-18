@@ -16,7 +16,7 @@ export function Footer() {
         target="_blank"
         rel="noreferrer"
         aria-label="Arken on X"
-        className="focus-ring text-ink-faint transition-colors hover:text-ink-muted"
+        className="focus-ring inline-flex shrink-0 items-center text-ink-faint transition-colors hover:text-ink-muted"
       >
         <XMark size={14} />
       </a>

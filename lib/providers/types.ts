@@ -11,10 +11,16 @@ export interface ProviderMeta {
   modelDisplayName: string;
   keyPlaceholder: string;
   getKeyUrl: string;
-  /** Path (under /public) to this provider's logo SVG — e.g. "/logos/openai.svg".
-   * The UI renders whatever is here, so a new provider just needs to point
-   * to its own file; no component changes required. */
-  logoPath: string;
+  /** A single accent color (hex) used as the fallback badge when no real
+   * logo file is set below. */
+  color: string;
+  /** Optional path (under /public) to a real logo file, e.g.
+   * "/logos/openai.svg" — used only if YOU place a genuine file you
+   * sourced directly from that provider at this path. Left unset here on
+   * purpose: Claude will not fetch, redraw, or approximate any company's
+   * logo (see ARCHITECTURE.md). If this is set, ProviderLogo renders the
+   * image; if not, it falls back to the colored initial badge. */
+  logoPath?: string;
 }
 
 export interface CallResult {

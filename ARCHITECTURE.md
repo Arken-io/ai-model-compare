@@ -102,7 +102,53 @@ If a provider's key field is empty, its result column shows "Add your
 state (most users will only have one or two of the three keys) — it is
 not a failure, so it shouldn't look like one.
 
-## Scope boundaries (deliberately out, for now)
+## Why there are no company logos anywhere in this app (yet)
+
+An earlier pass added `public/logos/*.svg` — hand-redrawn approximations
+of each provider's real logo. This was reverted: using another company's
+logo, official asset or a redrawn lookalike, inside a third-party product
+like this one is a trademark/brand-guideline question, and redrawing a
+lookalike doesn't avoid it — it's still their mark.
+
+The team's call (accepting the risk knowingly, take-down-on-request as
+the mitigation) was to use each provider's **real, officially-sourced**
+SVG rather than an approximation. Claude did not fetch or draw those
+files: no reliable way to guarantee a file obtained this way is the
+genuine current asset, and one provider's guidelines were confirmed
+(OpenAI's — see below) to conflict with the intended layout regardless
+of source. Sourcing genuine files is a manual step for whoever adds them.
+
+`ProviderMeta` has both `color` (always set, a hex fallback) and
+`logoPath` (optional, unset by default). `ProviderLogo` renders the real
+file if `logoPath` is set, otherwise the colored-initial badge. To add a
+real logo for a provider: download the actual SVG yourself from that
+provider's own brand page, drop it at `public/logos/<id>.svg`, add
+`logoPath: "/logos/<id>.svg"` to that provider's `meta`. See
+`public/logos/README.md`.
+
+**Known conflict, confirmed by reading OpenAI's actual brand
+guidelines:** they explicitly prohibit pairing their logomark with a
+product or model name. This app's result cards show the provider logo
+directly beside the model name (e.g. "GPT-5.6 Terra") — meaning even
+OpenAI's own genuine, officially-sourced file would not comply with
+their stated rules in this exact layout. The other seven providers'
+guidelines have not been individually confirmed; check each one before
+adding its file, not just before shipping.
+
+## Why the Provider Selector is a searchable popover, not a checkbox list
+
+With 3 providers, a row of toggle chips was fine. At 8+ (and the
+registry is meant to keep growing, see `lib/providers/index.ts`), a flat
+list stops scaling — scanning and clicking through a long row gets
+slower than typing a few letters. `ProviderSelector.tsx` is a
+command-palette-style popover (search input, filtered list, keyboard
+nav, multi-select) that reads off the same `providers` /
+`comingSoonProviders` arrays everything else does — adding provider #9
+needs no change here either.
+
+Selected providers stay visible as chips (`ProviderChips`) outside the
+popover at all times, so the current selection is never hidden behind a
+closed dropdown.
 
 - No AI Judge / scoring between responses — real feature, real added
   complexity, deferred until v1 has been used by a real person.

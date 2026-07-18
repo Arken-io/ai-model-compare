@@ -17,7 +17,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Model Compare — Arken",
+  title: "AI Model Compare · Arken",
   description:
     "Compare GPT, Claude, Gemini, and more side by side. Bring your own keys. Built by Arken.",
   icons: {

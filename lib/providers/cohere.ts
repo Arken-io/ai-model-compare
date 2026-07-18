@@ -8,7 +8,7 @@ export const meta: ProviderMeta = {
   modelDisplayName: MODELS.cohere.displayName,
   keyPlaceholder: "Cohere API key",
   getKeyUrl: "https://dashboard.cohere.com/api-keys",
-  logoPath: "/logos/cohere.svg",
+  color: "#2DD4BF",
 };
 
 /**

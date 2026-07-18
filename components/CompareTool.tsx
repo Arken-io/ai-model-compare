@@ -18,12 +18,12 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  Hash,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { providers, comingSoonProviders } from "@/lib/providers";
 import { ProviderLogo } from "./ProviderLogo";
+import { ProviderSelector, ProviderChips } from "./ProviderSelector";
 
 type ResultState = {
   text: string | null;
@@ -58,10 +58,6 @@ function saveRecentPrompts(prompts: string[]) {
 function wordCount(text: string): number {
   const trimmed = text.trim();
   return trimmed ? trimmed.split(/\s+/).length : 0;
-}
-
-function charCount(text: string): number {
-  return text.length;
 }
 
 const API_KEYS_STORAGE_KEY = "arken-compare:api-keys";
@@ -124,7 +120,7 @@ function friendlyError(message: string): { title: string; detail: string } {
     case 403:
       return { title: "Invalid API key", detail: "Check the key you entered above." };
     case 429:
-      return { title: "Rate limited", detail: "Too many requests — wait a moment and try again." };
+      return { title: "Rate limited", detail: "Too many requests. Wait a moment and try again." };
     case 404:
       return { title: "Model not found", detail: "This provider no longer serves the configured model." };
     case 500:
@@ -261,7 +257,7 @@ function ProviderResultStatus({
   if (result?.text) {
     return <CollapsibleText text={result.text} roomy={roomy} />;
   }
-  return <span className="text-ink-faint">Ready — press Compare.</span>;
+  return <span className="text-ink-faint">No response yet. Press the button above.</span>;
 }
 
 export function CompareTool() {
@@ -431,9 +427,9 @@ export function CompareTool() {
           <span className="text-ink-muted">side by side.</span>
         </h1>
         <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-ink-muted">
-          One prompt, any provider you pick — GPT, Claude, Gemini, Grok,
+          One prompt, any provider you pick: GPT, Claude, Gemini, Grok,
           DeepSeek, Mistral, Llama, Cohere, and counting. Each key talks
-          directly to its own provider from your browser — none of it
+          directly to its own provider from your browser. None of it
           touches our servers.
         </p>
       </motion.div>
@@ -461,40 +457,20 @@ export function CompareTool() {
             </span>
           )}
         </div>
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          {providers.map((p) => {
-            const active = !!selectedProviders[p.meta.id];
-            return (
-              <button
-                key={p.meta.id}
-                type="button"
-                onClick={() => toggleProvider(p.meta.id)}
-                aria-pressed={active}
-                className={`focus-ring flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] font-medium transition-all active:scale-95 ${
-                  active
-                    ? "border-accent/40 bg-accent/10 text-ink"
-                    : "border-border-soft text-ink-faint opacity-60 hover:opacity-100"
-                }`}
-              >
-                <ProviderLogo logoPath={p.meta.logoPath} label={p.meta.label} size={14} />
-                {p.meta.label}
-                {active && <Check size={12} className="text-accent-soft" />}
-              </button>
-            );
-          })}
-          {comingSoonProviders.map((p) => (
-            <span
-              key={p.id}
-              title={`${p.label} — coming soon`}
-              className="flex cursor-not-allowed items-center gap-1.5 rounded-full border border-dashed border-border-soft px-3 py-1.5 text-[12.5px] font-medium text-ink-faint opacity-50"
-            >
-              <ProviderLogo logoPath={p.logoPath} label={p.label} size={14} />
-              {p.label}
-              <span className="rounded-full bg-border-soft px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-ink-faint">
-                Soon
-              </span>
-            </span>
-          ))}
+        <div className="mb-5 flex flex-wrap items-start gap-3">
+          <ProviderSelector
+            providers={providers}
+            comingSoonProviders={comingSoonProviders}
+            selected={selectedProviders}
+            onToggle={toggleProvider}
+          />
+          <div className="flex-1 pt-2">
+            <ProviderChips
+              providers={providers}
+              selected={selectedProviders}
+              onRemove={toggleProvider}
+            />
+          </div>
         </div>
 
         <div className="mt-7 border-t border-border-soft pt-6">
@@ -510,7 +486,7 @@ export function CompareTool() {
             {visibleProviders.map((p) => (
             <div key={p.meta.id}>
               <div className="mb-1.5 flex items-center gap-1.5 text-[12px] font-medium text-ink-muted">
-                <ProviderLogo logoPath={p.meta.logoPath} label={p.meta.label} size={16} />
+                <ProviderLogo color={p.meta.color} logoPath={p.meta.logoPath} label={p.meta.label} size={16} />
                 {p.meta.label}
               </div>
               <div className="relative">
@@ -647,11 +623,12 @@ export function CompareTool() {
           >
             {anyLoading ? (
               <>
-                <Loader2 size={15} className="animate-spin" /> Comparing
+                <Loader2 size={15} className="animate-spin" />
+                {isTestMode ? "Testing" : "Comparing"}
               </>
             ) : (
               <>
-                Compare
+                {isTestMode ? "Test" : "Compare"}
                 <ArrowRight
                   size={15}
                   className="transition-transform group-hover:translate-x-0.5"
@@ -707,7 +684,7 @@ export function CompareTool() {
             >
               <div className="flex items-center justify-between gap-2 border-b border-border-soft px-5 py-4">
                 <div className="flex items-center gap-2.5">
-                  <ProviderLogo logoPath={p.meta.logoPath} label={p.meta.label} size={26} />
+                  <ProviderLogo color={p.meta.color} logoPath={p.meta.logoPath} label={p.meta.label} size={26} />
                   <div>
                     <div className="text-[14px] font-semibold text-ink">
                       {p.meta.label}
@@ -727,12 +704,6 @@ export function CompareTool() {
                     )}
                     {result.text && (
                       <span title="Word count">{wordCount(result.text)} words</span>
-                    )}
-                    {result.text && (
-                      <span className="flex items-center gap-1" title="Character count">
-                        <Hash size={11} />
-                        {charCount(result.text)}
-                      </span>
                     )}
                     <button
                       type="button"
@@ -801,7 +772,7 @@ export function CompareTool() {
               >
                 <div className="flex items-center justify-between gap-2 border-b border-border-soft px-5 py-4">
                   <div className="flex items-center gap-2.5">
-                    <ProviderLogo logoPath={p.meta.logoPath} label={p.meta.label} size={22} />
+                    <ProviderLogo color={p.meta.color} logoPath={p.meta.logoPath} label={p.meta.label} size={22} />
                     <div>
                       <div className="text-[13px] font-semibold leading-tight text-ink">
                         {p.meta.label}

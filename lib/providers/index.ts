@@ -19,10 +19,10 @@ export interface Provider {
 // count (not "3 columns", not "the 3rd provider" — N providers). To add
 // a provider:
 //   1. Create providers/xyz.ts exporting `meta` (id, label, keyPlaceholder,
-//      getKeyUrl, model, logoPath) and `call(prompt, apiKey)`.
-//   2. Drop a logo at public/logos/xyz.svg.
-//   3. Add one line below.
-// That's the whole change — nothing else needs to be touched.
+//      getKeyUrl, model, color) and `call(prompt, apiKey)`.
+//   2. Add one line below.
+// That's the whole change — nothing else needs to be touched. No logo
+// asset step: see the note on `color` in lib/providers/types.ts for why.
 //
 // Note: `meta` and `call` live together in the SAME file per provider on
 // purpose, rather than splitting UI-facing metadata into a separate
@@ -52,4 +52,4 @@ export const providers: Provider[] = [
  * lib/config/models.ts. Stage the NEXT batch of providers here the same
  * way before their API shapes have been checked.
  */
-export const comingSoonProviders: { id: string; label: string; logoPath: string }[] = [];
+export const comingSoonProviders: { id: string; label: string; color: string }[] = [];
