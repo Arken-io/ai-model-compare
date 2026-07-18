@@ -31,7 +31,7 @@ export function ProviderLogo({
         alt={`${label} logo`}
         width={size}
         height={size}
-        className={`shrink-0 object-contain ${className}`}
+        className={`shrink-0 rounded-full object-cover ${className}`}
         style={{ width: size, height: size }}
       />
     );
