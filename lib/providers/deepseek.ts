@@ -9,6 +9,7 @@ export const meta: ProviderMeta = {
   keyPlaceholder: "sk-...",
   getKeyUrl: "https://platform.deepseek.com/api_keys",
   color: "#38BDF8",
+  logoPath: "/logos/deepseek.jpg",
 };
 
 /**
