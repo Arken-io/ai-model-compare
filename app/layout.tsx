@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AmbientBackground } from "@/components/AmbientBackground";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,7 +19,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "AI Model Compare — Arken",
   description:
-    "Compare GPT, Claude and Gemini responses side by side. Bring your own keys. Built by Arken.",
+    "Compare GPT, Claude, Gemini, and more side by side. Bring your own keys. Built by Arken.",
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -38,6 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
       <body className="bg-base text-ink font-sans antialiased">
+        <AmbientBackground />
         {children}
       </body>
     </html>

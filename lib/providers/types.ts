@@ -1,5 +1,9 @@
 export interface ProviderMeta {
-  id: "openai" | "anthropic" | "google";
+  /** Stable slug, e.g. "openai" — used as the React key, the localStorage
+   * key, and the lib/providers/<id>.ts filename. Not a fixed union on
+   * purpose: the registry is meant to grow past three providers without
+   * editing this type. */
+  id: string;
   label: string;
   model: string;
   /** Human-friendly model name for UI display, separate from the raw API
@@ -7,6 +11,10 @@ export interface ProviderMeta {
   modelDisplayName: string;
   keyPlaceholder: string;
   getKeyUrl: string;
+  /** Path (under /public) to this provider's logo SVG — e.g. "/logos/openai.svg".
+   * The UI renders whatever is here, so a new provider just needs to point
+   * to its own file; no component changes required. */
+  logoPath: string;
 }
 
 export interface CallResult {

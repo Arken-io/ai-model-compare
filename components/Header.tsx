@@ -17,7 +17,7 @@ export function Header() {
         rel="noreferrer"
         className="focus-ring hidden sm:inline-flex items-center rounded-full border border-border px-3.5 py-1.5 text-[13px] text-ink-muted transition-colors hover:border-accent/40 hover:text-ink"
       >
-        Get a free API key ↗
+        Get a free Gemini key ↗
       </a>
     </header>
   );

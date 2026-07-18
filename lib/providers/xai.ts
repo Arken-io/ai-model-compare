@@ -2,17 +2,22 @@ import { ProviderMeta, readErrorDetail, safeFetch } from "./types";
 import { MODELS } from "../config/models";
 
 export const meta: ProviderMeta = {
-  id: "openai",
-  label: "GPT",
-  model: MODELS.openai.id,
-  modelDisplayName: MODELS.openai.displayName,
-  keyPlaceholder: "sk-...",
-  getKeyUrl: "https://platform.openai.com/api-keys",
-  logoPath: "/logos/openai.svg",
+  id: "xai",
+  label: "xAI",
+  model: MODELS.xai.id,
+  modelDisplayName: MODELS.xai.displayName,
+  keyPlaceholder: "xai-...",
+  getKeyUrl: "https://console.x.ai/team/default/api-keys",
+  logoPath: "/logos/xai.svg",
 };
 
+/**
+ * xAI's Chat Completions endpoint is intentionally OpenAI-compatible (same
+ * request/response shape as openai.ts) — this is documented behavior, not
+ * a coincidence, so this file mirrors openai.ts almost line for line.
+ */
 export async function call(prompt: string, apiKey: string): Promise<string> {
-  const url = "https://api.openai.com/v1/chat/completions";
+  const url = "https://api.x.ai/v1/chat/completions";
 
   const res = await safeFetch(url, {
     method: "POST",

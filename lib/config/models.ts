@@ -11,6 +11,18 @@
  *  - OpenAI:    https://developers.openai.com/api/docs/models
  *  - Anthropic: https://docs.claude.com/en/docs/about-claude/models
  *  - Google:    https://ai.google.dev/gemini-api/docs/models
+ *  - xAI:       https://docs.x.ai/developers/models (docs dated Jun 24, 2026)
+ *  - DeepSeek:  https://api-docs.deepseek.com/api/create-chat-completion —
+ *               the legacy `deepseek-chat` / `deepseek-reasoner` aliases
+ *               stop working Jul 24, 2026; this uses the versioned ids
+ *               (`deepseek-v4-flash` / `deepseek-v4-pro`) so this app
+ *               doesn't break itself on that date.
+ *  - Mistral:   https://docs.mistral.ai/api/endpoint/chat — pinned to the
+ *               `-latest` alias on purpose, see comment below.
+ *  - Meta Llama: https://llama.developer.meta.com/docs/models — official
+ *               Llama API, currently preview/waitlisted + US-only.
+ *  - Cohere:    https://docs.cohere.com/reference/chat — command-a-plus
+ *               (released May 20, 2026) is the current flagship.
  *
  * If a provider ever returns a "model not found" error, this is the
  * first (and probably only) file that needs to change.
@@ -37,4 +49,15 @@ export const MODELS = {
     { id: "gemini-2.5-flash", displayName: "Gemini 2.5 Flash" },
     { id: "gemini-2.5-flash-lite", displayName: "Gemini 2.5 Flash Lite" },
   ],
+  xai: { id: "grok-4.3", displayName: "Grok 4.3" },
+  deepseek: { id: "deepseek-v4-flash", displayName: "DeepSeek V4 Flash" },
+  // "-latest" is a Mistral-managed alias that repoints to their current
+  // flagship automatically — unlike the versioned ids above, this one is
+  // meant to stay unpinned, so don't "fix" it to a dated snapshot.
+  mistral: { id: "mistral-large-latest", displayName: "Mistral Large" },
+  llama: {
+    id: "Llama-4-Maverick-17B-128E-Instruct-FP8",
+    displayName: "Llama 4 Maverick",
+  },
+  cohere: { id: "command-a-plus-05-2026", displayName: "Command A+" },
 } as const;

@@ -8,6 +8,7 @@ export const meta: ProviderMeta = {
   modelDisplayName: MODELS.anthropic.displayName,
   keyPlaceholder: "sk-ant-...",
   getKeyUrl: "https://console.anthropic.com/settings/keys",
+  logoPath: "/logos/anthropic.svg",
 };
 
 export async function call(prompt: string, apiKey: string): Promise<string> {

@@ -132,6 +132,23 @@ not a failure, so it shouldn't look like one.
   Compare uses, just scoped to one provider; adding a new provider to
   `lib/providers/index.ts` gets Regenerate for free, no extra wiring.
 
+## Why `comingSoonProviders` is a separate, smaller list
+
+`meta.id` used to be a `"openai" | "anthropic" | "google"` union — fine
+when there were exactly three, but it meant the *type itself* had to be
+edited to add a fourth. It's now a plain `string`.
+
+That unlocked the Provider Selector to show more than the three live
+providers, but a full `Provider` entry needs a working `call()` — and
+guessing at xAI/DeepSeek/Mistral/Llama/Cohere's exact request shape,
+auth header, and error format without checking each one's current docs
+risks shipping a call that's subtly wrong. `comingSoonProviders` is the
+staging list instead: just `{ id, label, logoPath }`, rendered as
+disabled "Soon" chips in the Selector. It proves the Selector/grid don't
+assume a count of 3 without fabricating unverified API integrations.
+Promoting one is: build `lib/providers/<id>.ts` for real, then move its
+id from this list into `providers`.
+
 ## Deployment gotcha (learned the hard way)
 
 The first Vercel deploy failed not because of the code, but because the
