@@ -4,11 +4,9 @@
  * otherwise falls back to a colored initial badge using `color`.
  *
  * Claude does not fetch, redraw, or approximate any company's logo — see
- * ARCHITECTURE.md ("Why there are no company logos"). Each provider's
- * `logoPath` now points at a real file the project owner supplied in
- * public/logos/ (see that folder's README for the mapping and the
- * per-provider brand-guideline caveats, e.g. OpenAI). Remove a provider's
- * `logoPath` line to fall back to the colored-initial badge again.
+ * ARCHITECTURE.md ("Why there are no company logos"). This component
+ * ships with every provider's `logoPath` unset, so every badge renders
+ * as the colored-initial fallback until a real file is added manually.
  */
 export function ProviderLogo({
   color,
@@ -31,7 +29,7 @@ export function ProviderLogo({
         alt={`${label} logo`}
         width={size}
         height={size}
-        className={`shrink-0 rounded-full object-cover ${className}`}
+        className={`shrink-0 object-contain ${className}`}
         style={{ width: size, height: size }}
       />
     );

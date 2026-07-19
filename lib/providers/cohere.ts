@@ -9,7 +9,6 @@ export const meta: ProviderMeta = {
   keyPlaceholder: "Cohere API key",
   getKeyUrl: "https://dashboard.cohere.com/api-keys",
   color: "#2DD4BF",
-  logoPath: "/logos/cohere.jpg",
 };
 
 /**

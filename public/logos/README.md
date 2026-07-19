@@ -1,33 +1,29 @@
-# Real provider logos
+# Real provider logos go here (optional)
 
-These files were sourced by the project owner directly and are now wired
-up via `logoPath` in each provider's `meta` object
-(`lib/providers/<id>.ts`), so `ProviderLogo` (components/ProviderLogo.tsx)
-renders the real image instead of the colored-initial fallback.
+This folder is empty on purpose. Claude will not fetch, hand-redraw, or
+approximate any company's logo — see the note on `ProviderMeta.logoPath`
+in `lib/providers/types.ts` and the "Why there are no company logos"
+section in ARCHITECTURE.md for why.
 
-Current mapping:
+If you want a provider's real logo to appear instead of its colored
+initial badge:
 
-| Provider   | File          |
-| ---------- | ------------- |
-| Anthropic  | anthropic.jpg |
-| OpenAI     | openai.jpg    |
-| Google     | google.jpg    |
-| xAI        | xai.jpg       |
-| DeepSeek   | deepseek.jpg  |
-| Mistral    | mistral.jpg   |
-| Meta Llama | llama.jpg     |
-| Cohere     | cohere.jpg    |
+1. Download the actual SVG yourself, directly from that provider's own
+   brand/press page (not a third-party icon pack, not a screenshot trace).
+2. Save it here as `<provider-id>.svg` (e.g. `openai.svg`, matching the
+   `id` in that provider's `meta` in `lib/providers/<id>.ts`).
+3. Add `logoPath: "/logos/<provider-id>.svg"` to that provider's `meta`
+   object.
 
-Before shipping this publicly, double-check each provider's current
-brand/trademark guidelines for third-party use — in particular, OpenAI's
-guidelines (as of this writing) prohibit pairing their logomark with a
-product or model name, which is exactly how this app's result cards are
-laid out (logo next to "GPT-5.6 Terra"). That may rule out compliant use
-of the real OpenAI logo in this specific layout even with a genuine file.
-The other providers' policies have not been checked here — verify
-per-provider before relying on this in production.
+`ProviderLogo` (components/ProviderLogo.tsx) checks for `logoPath` first
+and falls back to the colored badge automatically — no other code needs
+to change.
 
-To swap out a file: replace `<provider-id>.jpg` with your own image (same
-filename), or update the matching `logoPath` in that provider's `meta`
-object if you rename it. To go back to the colored-initial fallback for
-any provider, just remove its `logoPath` line.
+Before doing this for any provider, check that provider's current brand
+guidelines for third-party/identification use. At minimum, OpenAI's
+guidelines (as of this writing) explicitly prohibit pairing their
+logomark with a product or model name — which is exactly how this app's
+result cards are laid out (logo next to "GPT-5.6 Terra"). That may rule
+out compliant use of their real logo in this specific layout even with
+the genuine file. The other providers' policies have not been checked
+here; check per-provider before adding a file.

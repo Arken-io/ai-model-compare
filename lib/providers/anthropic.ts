@@ -9,7 +9,6 @@ export const meta: ProviderMeta = {
   keyPlaceholder: "sk-ant-...",
   getKeyUrl: "https://console.anthropic.com/settings/keys",
   color: "#FB923C",
-  logoPath: "/logos/anthropic.jpg",
 };
 
 export async function call(prompt: string, apiKey: string): Promise<string> {

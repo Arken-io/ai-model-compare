@@ -9,7 +9,6 @@ export const meta: ProviderMeta = {
   keyPlaceholder: "sk-...",
   getKeyUrl: "https://platform.openai.com/api-keys",
   color: "#34D399",
-  logoPath: "/logos/openai.jpg",
 };
 
 export async function call(prompt: string, apiKey: string): Promise<string> {

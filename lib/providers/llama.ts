@@ -9,7 +9,6 @@ export const meta: ProviderMeta = {
   keyPlaceholder: "Llama API key",
   getKeyUrl: "https://llama.developer.meta.com/",
   color: "#F472B6",
-  logoPath: "/logos/llama.jpg",
 };
 
 /**

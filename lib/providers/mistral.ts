@@ -9,7 +9,6 @@ export const meta: ProviderMeta = {
   keyPlaceholder: "Mistral API key",
   getKeyUrl: "https://console.mistral.ai/api-keys/",
   color: "#FBBF24",
-  logoPath: "/logos/mistral.jpg",
 };
 
 /**
