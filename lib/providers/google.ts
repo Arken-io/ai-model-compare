@@ -16,6 +16,7 @@ export const meta: ProviderMeta = {
   keyPlaceholder: "AIza...",
   getKeyUrl: "https://aistudio.google.com/app/apikey",
   color: "#60A5FA",
+  logoPath: "/logos/google.jpg",
 };
 
 async function tryModel(

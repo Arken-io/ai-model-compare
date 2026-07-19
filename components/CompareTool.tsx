@@ -264,7 +264,7 @@ export function CompareTool() {
   const [keys, setKeys] = useState<Record<string, string>>({});
   const [selectedProviders, setSelectedProviders] = useState<
     Record<string, boolean>
-  >(() => Object.fromEntries(providers.map((p) => [p.meta.id, true])));
+  >({});
   const [prompt, setPrompt] = useState("");
   const [results, setResults] = useState<Record<string, ResultState>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});

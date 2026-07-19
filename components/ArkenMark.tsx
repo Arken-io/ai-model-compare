@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { BASE_PATH } from "@/lib/basePath";
 
 export function ArkenMark({
   size = 22,
@@ -9,7 +10,7 @@ export function ArkenMark({
 }) {
   return (
     <Image
-      src="/arken-logo.png"
+      src={`${BASE_PATH}/arken-logo.png`}
       alt="Arken"
       width={size}
       height={size}
